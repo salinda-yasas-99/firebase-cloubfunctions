@@ -79,42 +79,15 @@ exports.updateBook = (req, res) => {
   }
 };
 
-/* exports.deleteBookByID = (req, res) => {
-  const bookId = req.params.id;
-
-  db.collection("Books")
-    .doc(`/books/${req.params.Id}`)
-    .get()
-    .then((doc) => {
-      if (!doc.exists) {
-        return res.status(404).json({ error: "Book not found" });
-      }
-      //   if (doc.data().userHandle !== req.user.handle) {
-      //     return res.status(403).json({ error: "Unauthorized" });
-      //   }
-      else {
-        return document.delete();
-      }
-
-      //res.json({ message: "Delete successfull" });
-    })
-    .then(() => {
-      res.json({ message: "Book deleted successfully" });
-    })
-    .catch((err) => {
-      res.status(500).json({ error: "Failed to delete book" });
-      console.error(err);
-    });
-}; */
-
+//delete book
 exports.deleteBookByID = (req, res) => {
-  const bookId = req.params;
+  const bookId = req.params.Id;
 
   db.collection("Books")
     .doc(bookId)
     .delete()
     .then(() => {
-      res.json({ message: "Book with ID ${bookId} deleted successfully." });
+      res.json({ message: `Book with ID ${bookId} deleted successfully.` });
     })
     .catch((error) => {
       res.status(500).json({ error: "Failed to delete book" });
