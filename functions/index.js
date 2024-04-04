@@ -13,7 +13,7 @@ const {
   deleteBookByID,
 } = require("./APIS/books");
 
-const { registerUser } = require("./APIS/user");
+const { registerUser, loginUser } = require("./APIS/user");
 
 //books
 app.get("/books", getAllBooks);
@@ -23,6 +23,7 @@ app.delete("/books/:Id", deleteBookByID);
 
 //user
 app.post("/user/register", registerUser);
+app.post("/user/login", loginUser);
 
 // app.get("/books", (req, res) => {
 //   admin
