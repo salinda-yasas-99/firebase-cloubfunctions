@@ -13,17 +13,28 @@ const {
   deleteBookByID,
 } = require("./APIS/books");
 
-const { registerUser, loginUser } = require("./APIS/user");
+const {
+  registerUser,
+  loginUser,
+  registerAdmin,
+  registerSuperAdmin,
+  accessAuthorize,
+  accessCheck,
+} = require("./APIS/user");
 
 //books
 app.get("/books", getAllBooks);
-app.post("/addbook", addNewBook);
-app.put("/books/:id", updateBook);
-app.delete("/books/:Id", deleteBookByID);
+//app.get("/books", getAllBooks);
+app.post("/addbook", accessAuthorize, addNewBook);
+app.put("/books/:id", accessAuthorize, updateBook);
+app.delete("/books/:Id", accessAuthorize, deleteBookByID);
 
 //user
 app.post("/user/register", registerUser);
+app.post("/admin/register", registerAdmin);
+app.post("/superadmin/register", registerSuperAdmin);
 app.post("/user/login", loginUser);
+app.post("/user/check", accessCheck);
 
 // app.get("/books", (req, res) => {
 //   admin
