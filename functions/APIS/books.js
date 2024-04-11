@@ -5,6 +5,7 @@ const {
   ref,
   uploadBytes,
   getDownloadURL,
+  deleteObject,
 } = require("firebase/storage");
 
 //get all the books
@@ -72,6 +73,7 @@ exports.addNewBook = async (req, res) => {
             ImageUrl: downloadURL,
             Grade: req.body.Grade,
             Weight: req.body.Weight,
+            ImageFileName: fileName,
           };
 
           // Add book to Firestore
@@ -134,17 +136,52 @@ exports.updateBook = (req, res) => {
 };
 
 //delete book
-exports.deleteBookByID = (req, res) => {
-  const bookId = req.params.Id;
+// exports.deleteBookByID = (req, res) => {
+//   const bookId = req.params.Id;
 
-  db.collection("Books")
-    .doc(bookId)
-    .delete()
-    .then(() => {
-      res.json({ message: `Book with ID ${bookId} deleted successfully.` });
-    })
-    .catch((error) => {
-      res.status(500).json({ error: "Failed to delete book" });
-      console.error(error);
-    });
+//   db.collection("Books")
+//     .doc(bookId)
+//     .delete()
+//     .then(() => {
+//       res.json({ message: `Book with ID ${bookId} deleted successfully.` });
+//     })
+//     .catch((error) => {
+//       res.status(500).json({ error: "Failed to delete book" });
+//       console.error(error);
+//     });
+// };
+
+exports.deleteBookByID = async (req, res) => {
+  try {
+    const bookId = req.params.Id;
+
+    // Get book document
+    const bookRef = db.collection("Books").doc(bookId);
+    const bookSnap = await bookRef.get();
+
+    // Check if book exists
+    if (!bookSnap.exists) {
+      return res
+        .status(404)
+        .json({ error: `Book with ID ${bookId} not found.` });
+    }
+
+    // Get image URL from book data (assuming a field named 'ImageUrl')
+    const imageFile = bookSnap.data().ImageFileName;
+
+    // If image URL exists, delete the image from Storage
+    if (imageFile) {
+      const storage = getStorage();
+      const imageRef = ref(storage, `books/${imageFile}`); // Extract object name from URL
+      await deleteObject(imageRef); // Delete the image
+    }
+
+    // Delete the book document
+    await bookRef.delete();
+
+    res.json({ message: `Book with ID ${bookId} deleted successfully.` });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to delete book" });
+  }
 };

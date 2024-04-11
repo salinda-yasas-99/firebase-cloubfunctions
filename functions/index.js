@@ -3,7 +3,14 @@ const logger = require("firebase-functions/logger");
 
 //configuring express
 const express = require("express");
+const cors = require("cors");
+
 const app = express();
+app.use(cors());
+
+// app.use(cors({
+//   origin: 'http://example.com' // Replace with your allowed origin
+// }));
 
 //get all the books
 const {
