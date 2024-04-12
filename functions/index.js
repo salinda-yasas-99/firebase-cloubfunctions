@@ -26,7 +26,7 @@ const {
   registerAdmin,
   registerSuperAdmin,
   accessAuthorize,
-  accessCheck,
+  accessAuthorizeSuper,
 } = require("./APIS/user");
 
 //books
@@ -38,10 +38,10 @@ app.delete("/books/:Id", accessAuthorize, deleteBookByID);
 
 //user
 app.post("/user/register", registerUser);
-app.post("/admin/register", registerAdmin);
-app.post("/superadmin/register", registerSuperAdmin);
+app.post("/admin/register", accessAuthorizeSuper, registerAdmin);
+app.post("/superadmin/register", accessAuthorizeSuper, registerSuperAdmin);
 app.post("/user/login", loginUser);
-app.post("/user/check", accessCheck);
+//app.post("/user/check", accessCheck);
 
 // app.get("/books", (req, res) => {
 //   admin

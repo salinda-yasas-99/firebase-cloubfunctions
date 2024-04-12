@@ -71,130 +71,103 @@ exports.registerUser = (req, res) => {
 };
 
 //admin role register
-exports.registerAdmin = (req, res) => {
+exports.registerAdmin = async (req, res) => {
   const newUser = {
     email: req.body.email,
     password: req.body.password,
-    // confirmPassword: req.body.confirmPassword,
   };
 
   // ToDO valiate data
-  db.collection("users")
-    .doc(newUser.email)
-    .get()
-    .then((doc) => {
-      if (doc.exists) {
-        return res.status(400).json({ email: "email already exists" });
-      } else {
-        return createUserWithEmailAndPassword(
-          userAuth,
-          newUser.email,
-          newUser.password
-        );
-        // createUser({
-        //   email: newUser.email,
-        //   password: newUser.password,
-        // });
-      }
-    })
-    .then((userRecord) => {
-      let user = {
-        email: userRecord.user.email,
-        userId: userRecord.user.uid,
-        role: "admin",
-      };
+  const doc = await db.collection("users").doc(newUser.email).get();
+  if (doc.exists) {
+    return res.status(400).json({ email: "email already exists" });
+  }
 
-      db.collection("users").add(user);
-      return userRecord.user.getIdToken();
-    })
-    .then((token) => {
-      return res.status(200).json({ idtoken: token });
-    })
-    .catch((err) => {
-      console.error(err);
-      return res.status(500).json({ error: err });
-    });
+  try {
+    const userRecord = await createUserWithEmailAndPassword(
+      userAuth,
+      newUser.email,
+      newUser.password
+    );
+    let user = {
+      email: userRecord.user.email,
+      userId: userRecord.user.uid,
+      role: "admin",
+    };
+
+    await db.collection("users").add(user);
+    //user record
+    //return userRecord.user.getIdToken();
+    //return res.status(200).json(userRecord);
+    return res.status(200).json("new admin registered successfully");
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: err });
+  }
 };
 
 //superAdmin role register
-exports.registerSuperAdmin = (req, res) => {
+exports.registerSuperAdmin = async (req, res) => {
   const newUser = {
     email: req.body.email,
     password: req.body.password,
-    // confirmPassword: req.body.confirmPassword,
   };
 
   // ToDO valiate data
-  db.collection("users")
-    .doc(newUser.email)
-    .get()
-    .then((doc) => {
-      if (doc.exists) {
-        return res.status(400).json({ email: "email already exists" });
-      } else {
-        return createUserWithEmailAndPassword(
-          userAuth,
-          newUser.email,
-          newUser.password
-        );
-        // createUser({
-        //   email: newUser.email,
-        //   password: newUser.password,
-        // });
-      }
-    })
-    .then((userRecord) => {
-      let user = {
-        email: userRecord.user.email,
-        userId: userRecord.user.uid,
-        role: "superadmin",
-      };
+  const doc = await db.collection("users").doc(newUser.email).get();
+  if (doc.exists) {
+    return res.status(400).json({ email: "email already exists" });
+  }
 
-      db.collection("users").add(user);
-      return userRecord.user.getIdToken();
-    })
-    .then((token) => {
-      return res.status(200).json({ idtoken: token });
-    })
-    .catch((err) => {
-      console.error(err);
-      return res.status(500).json({ error: err });
-    });
+  try {
+    const userRecord = await createUserWithEmailAndPassword(
+      userAuth,
+      newUser.email,
+      newUser.password
+    );
+    let user = {
+      email: userRecord.user.email,
+      userId: userRecord.user.uid,
+      role: "superadmin",
+    };
+
+    await db.collection("users").add(user);
+    return res.status(200).json("new superadmin registered successfully");
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: err });
+  }
 };
 
-exports.loginUser = (req, res) => {
-  // const userAuth = getAuth();
+//dashboard login
+exports.loginUser = async (req, res) => {
   const user = {
     email: req.body.email,
     password: req.body.password,
   };
 
-  signInWithEmailAndPassword(userAuth, user.email, user.password)
-    //signInWithEmailAndPassword(userAuth, user.email, user.password)
-    .then((userRecord) => {
-      return userRecord.user.getIdToken();
-      //return res.status(200)
-      //.json({ Token: obj.user.stsTokenManager.accessToken });
-      //.json({ obj })
-      //.json({userRecord.user.get});
-    })
-    .then((token) => {
-      return res.status(200).json({ idtoken: token });
-    })
-    .catch((error) => {
-      if (error.code === "auth/user-not-found") {
-        return res.status(401).json("There no user exist with that email");
-        //console.log("There no user exist with that email");
-      }
+  try {
+    const userRecord = await signInWithEmailAndPassword(
+      userAuth,
+      user.email,
+      user.password
+    );
+    //const token = await userRecord.user.getIdToken();
+    //return res.status(200).json({ idtoken: token });
+    return res.status(200).json(userRecord);
+  } catch (error) {
+    if (error.code === "auth/user-not-found") {
+      return res.status(401).json("There no user exist with that email");
+    }
 
-      if (error.code === "auth/invalid-email") {
-        return res.status(401).json("That email address is invalid!");
-        //.log("That email address is invalid!");
-      }
-      return res.status(401).json("something went wrong!");
-    });
+    if (error.code === "auth/invalid-email") {
+      return res.status(401).json("That email address is invalid!");
+    }
+    return res.status(401).json("something went wrong!");
+  }
 };
 
+//admin and superadmin authorize
 exports.accessAuthorize = async (req, res, next) => {
   let jwtToken;
   if (
@@ -238,38 +211,8 @@ exports.accessAuthorize = async (req, res, next) => {
   }
 };
 
-/*exports.accessAuthorize = (req, res, next) => {
-  let jwtToken;
-  if (
-    req.headers.authorization &&
-    req.headers.authorization.startsWith("Bearer ")
-  ) {
-    idToken = req.headers.authorization.split("Bearer ")[1];
-    jwtToken = idToken;
-  } else {
-    console.error("No token found");
-    return res.status(403).json({ error: "Unauthorized" });
-  }
-
-  // getAuth()
-  //   .verifyIdToken(jwtToken)
-  admin
-    .auth()
-    .verifyIdToken(jwtToken)
-    .then((decodedToken) => {
-      const uid = decodedToken.uid;
-      let user = db.collection("users").doc(uid).get();
-      if (user) {
-        return next();
-      }
-    })
-    .catch((err) => {
-      console.error("Error while verifying token", err);
-      return res.status(403).json(err);
-    });
-};*/
-
-exports.accessCheck = async (req, res) => {
+//superadmin authorize
+exports.accessAuthorizeSuper = async (req, res, next) => {
   let jwtToken;
   if (
     req.headers.authorization &&
@@ -292,13 +235,14 @@ exports.accessCheck = async (req, res) => {
     if (!userSnapshot.empty) {
       // Extract the user document data from the first document in the snapshot
       const userData = userSnapshot.docs[0].data();
-      if (userData.role === "admin" || userData.role === "superadmin") {
-        return res.status(200).json(`${userData.role} = you are authorised`);
+      if (userData.role === "superadmin") {
+        return next();
       } else {
-        return res.status(403).json(`you are umauthorised`);
+        console.error({ error: "you are unauthorised to perform this action" });
+        return res
+          .status(403)
+          .json(`you are unauthorised to perform this action`);
       }
-      //return res.status(200).json(userData.role);
-      //return res.status(200).json({ userSnapshot });
     } else {
       console.error("User not found");
       return res.status(403).json({ error: "user not found" });
@@ -309,24 +253,75 @@ exports.accessCheck = async (req, res) => {
   }
 };
 
-// admin
-//     .auth()
-//     .verifyIdToken(jwtToken)
-//     .then((decodedToken) => {
-//       const uid = decodedToken.uid;
-//       let user = db.collection("users").doc(uid).get();
-//       return res.status(200).json(user);
-//       // if (user.role == "admin") {
-//       //   return res.status(200).json("this is admin");
-//       // } else if (user.role == "user") {
-//       //   return res.status(200).json("this is user");
-//       // } else if (user.role == "superAdmin") {
-//       //   return res.status(200).json("this is superAdmin");
-//       // } else {
-//       //   return res.status(200).json("No role found");
-//       // }
-//     })
-//     .catch((err) => {
-//       console.error("Error while verifying token", err);
-//       return res.status(403).json(err);
-//     });
+//book store user save in database
+exports.UserSave = async (req, res) => {
+  let jwtToken;
+  if (
+    req.headers.authorization &&
+    req.headers.authorization.startsWith("Bearer ")
+  ) {
+    var idTok = req.headers.authorization.split("Bearer ")[1];
+    jwtToken = idTok;
+  } else {
+    console.error("No token found");
+    return res.status(403).json({ error: "Unauthorized" });
+  }
+
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(jwtToken);
+    const uid = decodedToken.uid;
+    const email = decodedToken.email;
+    let user = {
+      userId: uid,
+      email: email,
+      role: "users",
+    };
+
+    await db.collection("users").add(user);
+    return res.status(200).json("User saved to database successfully");
+  } catch (err) {
+    console.error("Error while verifying token", err);
+    return res.status(403).json({ error: "Error while verifying token" });
+  }
+};
+
+//access check
+// exports.accessCheck = async (req, res) => {
+//   let jwtToken;
+//   if (
+//     req.headers.authorization &&
+//     req.headers.authorization.startsWith("Bearer ")
+//   ) {
+//     var idTok = req.headers.authorization.split("Bearer ")[1];
+//     jwtToken = idTok;
+//   } else {
+//     console.error("No token found");
+//     return res.status(403).json({ error: "Unauthorized" });
+//   }
+
+//   try {
+//     const decodedToken = await admin.auth().verifyIdToken(jwtToken);
+//     const uid = decodedToken.uid;
+//     const userSnapshot = await db
+//       .collection("users")
+//       .where("userId", "==", uid)
+//       .get();
+//     if (!userSnapshot.empty) {
+//       // Extract the user document data from the first document in the snapshot
+//       const userData = userSnapshot.docs[0].data();
+//       if (userData.role === "admin" || userData.role === "superadmin") {
+//         return res.status(200).json(`${userData.role} = you are authorised`);
+//       } else {
+//         return res.status(403).json(`you are umauthorised`);
+//       }
+//       //return res.status(200).json(userData.role);
+//       //return res.status(200).json({ userSnapshot });
+//     } else {
+//       console.error("User not found");
+//       return res.status(403).json({ error: "user not found" });
+//     }
+//   } catch (err) {
+//     console.error("Error while verifying token", err);
+//     return res.status(403).json({ error: "Error while verifying token" });
+//   }
+// };

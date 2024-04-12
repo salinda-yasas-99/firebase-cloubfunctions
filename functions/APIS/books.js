@@ -74,6 +74,8 @@ exports.addNewBook = async (req, res) => {
             Grade: req.body.Grade,
             Weight: req.body.Weight,
             ImageFileName: fileName,
+            Language: req.body.Language,
+            Subject: req.body.Subject,
           };
 
           // Add book to Firestore
@@ -117,6 +119,9 @@ exports.updateBook = (req, res) => {
       ImageUrl: req.body.ImageUrl,
       Grade: req.body.Grade,
       Weight: req.body.Weight,
+      Language: req.body.Language,
+      Grade: req.body.Grade,
+      Subject: req.body.Subject,
     };
 
     db.collection("Books")
@@ -134,22 +139,6 @@ exports.updateBook = (req, res) => {
     res.status(500).json(err);
   }
 };
-
-//delete book
-// exports.deleteBookByID = (req, res) => {
-//   const bookId = req.params.Id;
-
-//   db.collection("Books")
-//     .doc(bookId)
-//     .delete()
-//     .then(() => {
-//       res.json({ message: `Book with ID ${bookId} deleted successfully.` });
-//     })
-//     .catch((error) => {
-//       res.status(500).json({ error: "Failed to delete book" });
-//       console.error(error);
-//     });
-// };
 
 exports.deleteBookByID = async (req, res) => {
   try {
